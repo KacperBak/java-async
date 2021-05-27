@@ -1,0 +1,9 @@
+# README
+Simple Java async examples
+
+## Sources
+- https://www.baeldung.com/java-completablefuture
+- https://github.com/electronicarts/ea-async
+- https://dzone.com/articles/lambdas-in-concurrency-with-non-blocking-io
+- https://www.deadcoderising.com/java8-writing-asynchronous-code-with-completablefuture/
+- https://grokonez.com/java/java-8/java-8-multiple-completablefutures
