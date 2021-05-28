@@ -3,12 +3,29 @@
  */
 package de.kacperbak;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 public class App {
-    public String getGreeting() {
-        return "Hello world.";
+    public static void main(String[] args) {
+        try {
+            var app = new App();
+            var helloString = app.calculateAsync().get();
+            System.out.println("helloString: " + helloString);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+    public Future<String> calculateAsync() throws InterruptedException {
+        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+        Executors.newCachedThreadPool().submit(() -> {
+            Thread.sleep(5000);
+            completableFuture.complete("Hello");
+            return null;
+        });
+
+        return completableFuture;
     }
 }

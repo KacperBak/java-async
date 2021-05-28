@@ -5,10 +5,27 @@ package de.kacperbak;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import java.util.concurrent.TimeUnit;
 
 public class AppTest {
-    @Test public void testAppHasAGreeting() {
-        App classUnderTest = new App();
-        assertNotNull("app should have a greeting", classUnderTest.getGreeting());
+
+    /**
+     * Simple implementation that waits for the future to complete
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     */
+    @Test public void testCalculateAsync() throws Exception {
+        var app = new App();
+
+        stopWatch("start");
+        var actualResult = app.calculateAsync().get();
+        stopWatch("end");
+
+        assertEquals("Hello", actualResult);
+    }
+
+    private static void stopWatch(String action)
+    {
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+        System.out.printf("--- %s : %s --- %n", seconds, action);
     }
 }
