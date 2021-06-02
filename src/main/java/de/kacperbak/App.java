@@ -14,7 +14,7 @@ public class App {
     public static void main(String[] args) {
         try {
             var app = new App();
-            var helloString = app.usingThenApply().get();
+            var helloString = app.usingThenResult().get();
             System.out.println("helloString: " + helloString);
         } catch (Exception e) {
             System.out.println(e);
@@ -23,7 +23,7 @@ public class App {
 
     /**
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
-     * 2nd Lambda: Accepts a function instance, processes the result and returns a Future<string>
+     * 2nd Lambda: Accepts a function instance with parameters, processes the result and returns a Future<string>
      */
     public Future<String> usingThenApply() {
         var cf = CompletableFuture.supplyAsync(
@@ -35,6 +35,38 @@ public class App {
                 s -> {
                     threadSleep(PAUSE_IN_MS);
                     return s + " World!";
+                });
+    }
+
+    /**
+     * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
+     * 2nd Lambda: Accepts a function instance with parameters, processes the result and returns Void
+     * @return
+     */
+    public CompletableFuture<Void> usingThenAccept() {
+        var cf = CompletableFuture.supplyAsync(
+                () -> {
+                    return "Hello";
+                });
+        return cf.thenAccept(
+                s -> {
+                    System.out.printf(s + " World!");
+                });
+    }
+
+    /**
+     * 1st Lambda: Accepts a function instance with no parameters, processes the result and returns Void
+     * 2nd Lambda: Accepts a function instance with no parameters, processes the result and returns Void
+     * @return
+     */
+    public CompletableFuture<Void> usingThenResult() {
+        var cf = CompletableFuture.runAsync(
+                () -> {
+                    System.out.printf("Hello World!");
+                });
+        return cf.thenRunAsync(
+                () -> {
+                    System.out.printf("Hello World!");
                 });
     }
 

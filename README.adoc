@@ -4,9 +4,13 @@ Simple Java async examples
 
 ## NEXT
 ### Processing Results of Asynchronous Computations
-- DONE thenApply
-- thenAccept
-- thenRun
+- thenCompose
+- thenCombine
+- thenAcceptBoth
+- diff between thenApply and thenCompose
+- join parallel futures
+- handle
+- diff between thenApply and thenApplyAsync ()
 
 ## Sources
 - https://www.baeldung.com/java-completablefuture

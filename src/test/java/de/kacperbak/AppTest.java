@@ -3,20 +3,26 @@
  */
 package de.kacperbak;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
 public class AppTest {
 
     private App app;
-
-    private static String EXPECTED_HELLO_WORLD = "Hello World!";
+    private final String EXPECTED_HELLO_WORLD = "Hello World!";
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final PrintStream originalOut = System.out;
 
     @Before
     public void setUp() throws Exception {
         app = new App();
+        System.setOut(new PrintStream(outContent));
     }
 
     /**
@@ -63,9 +69,31 @@ public class AppTest {
         assertEquals(EXPECTED_HELLO_WORLD, actualResult);
     }
 
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     */
+    @Test public void testUsingThenAccept() throws Exception {
+        app.usingThenAccept().get();
+        assertEquals(EXPECTED_HELLO_WORLD, outContent.toString());
+    }
+
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     */
+    @Test public void testUsingThenResult() throws Exception {
+        app.usingThenResult().get();
+        assertEquals(EXPECTED_HELLO_WORLD + EXPECTED_HELLO_WORLD, outContent.toString());
+    }
+
     private static void stopWatch(String action)
     {
         long seconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         System.out.printf("--- %s : %s --- %n", seconds, action);
+    }
+
+
+    @After
+    public void restoreStreams() {
+        System.setOut(originalOut);
     }
 }
