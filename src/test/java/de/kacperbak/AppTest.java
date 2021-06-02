@@ -3,24 +3,64 @@
  */
 package de.kacperbak;
 
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.concurrent.TimeUnit;
 
 public class AppTest {
 
+    private App app;
+
+    private static String EXPECTED_HELLO_WORLD = "Hello World!";
+
+    @Before
+    public void setUp() throws Exception {
+        app = new App();
+    }
+
     /**
-     * Simple implementation that waits for the future to complete
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     */
+    @Test public void testCalculateAsyncWithSupply() throws Exception {
+        stopWatch("start");
+        var actualResult = app.calculateAsyncWithThreadPoolAccess().get();
+        stopWatch("end");
+
+        assertEquals(EXPECTED_HELLO_WORLD, actualResult);
+    }
+
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     */
+    @Test public void testCalculateAsyncWithSupplyAndParameter() throws Exception {
+        stopWatch("start");
+        var actualResult = app.calculateAsyncWithSupplyAndParameter(" World!").get();
+        stopWatch("end");
+
+        assertEquals(EXPECTED_HELLO_WORLD, actualResult);
+    }
+
+    /**
      * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
      */
     @Test public void testCalculateAsync() throws Exception {
-        var app = new App();
-
         stopWatch("start");
-        var actualResult = app.calculateAsync().get();
+        var actualResult = app.calculateAsyncWithThreadPoolAccess().get();
         stopWatch("end");
 
-        assertEquals("Hello", actualResult);
+        assertEquals(EXPECTED_HELLO_WORLD, actualResult);
+    }
+
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     */
+    @Test public void testUsingThenApply() throws Exception {
+        stopWatch("start");
+        var actualResult = app.usingThenApply().get();
+        stopWatch("end");
+
+        assertEquals(EXPECTED_HELLO_WORLD, actualResult);
     }
 
     private static void stopWatch(String action)

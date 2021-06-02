@@ -1,9 +1,19 @@
 # README
 Simple Java async examples
 
+
+## NEXT
+### Processing Results of Asynchronous Computations
+- DONE thenApply
+- thenAccept
+- thenRun
+
 ## Sources
 - https://www.baeldung.com/java-completablefuture
-- https://github.com/electronicarts/ea-async
-- https://dzone.com/articles/lambdas-in-concurrency-with-non-blocking-io
+- https://mkyong.com/java8/java-8-consumer-examples/
+- https://mkyong.com/java8/java-8-supplier-examples/
+
 - https://www.deadcoderising.com/java8-writing-asynchronous-code-with-completablefuture/
+- https://dzone.com/articles/lambdas-in-concurrency-with-non-blocking-io
+- https://github.com/electronicarts/ea-async
 - https://grokonez.com/java/java-8/java-8-multiple-completablefutures

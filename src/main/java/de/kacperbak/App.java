@@ -8,24 +8,70 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class App {
+
+    private static final int PAUSE_IN_MS = 2000;
+
     public static void main(String[] args) {
         try {
             var app = new App();
-            var helloString = app.calculateAsync().get();
+            var helloString = app.usingThenApply().get();
             System.out.println("helloString: " + helloString);
         } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-    public Future<String> calculateAsync() throws InterruptedException {
+    /**
+     * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
+     * 2nd Lambda: Accepts a function instance, processes the result and returns a Future<string>
+     */
+    public Future<String> usingThenApply() {
+        var cf = CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS);
+                    return "Hello";
+                });
+        return cf.thenApply(
+                s -> {
+                    threadSleep(PAUSE_IN_MS);
+                    return s + " World!";
+                });
+    }
+
+    /**
+     * Lambda: Supplier with one input parameter and a Future<string> as return type
+     */
+    public Future<String> calculateAsyncWithSupplyAndParameter(String s) {
+        return CompletableFuture.supplyAsync(() -> {
+            threadSleep(PAUSE_IN_MS);
+            return "Hello " + s;
+        });
+    }
+
+    /**
+     * Access to the threat pool underneath
+     */
+    public Future<String> calculateAsyncWithThreadPoolAccess() {
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
         Executors.newCachedThreadPool().submit(() -> {
-            Thread.sleep(5000);
-            completableFuture.complete("Hello");
+            threadSleep(PAUSE_IN_MS);
+            completableFuture.complete("Hello World!");
             return null;
         });
 
         return completableFuture;
+    }
+
+    /**
+     * This method encapsulates the IE exception that it is not propagated further
+     * @param ms
+     */
+    private void threadSleep(int ms) {
+        try {
+            Thread.sleep(ms);
+            System.out.printf("thread sleep for '%s' seconds.\n", (ms/1000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
