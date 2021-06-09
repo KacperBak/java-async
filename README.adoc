@@ -1,23 +1,29 @@
 # README
 Simple Java async examples
 
-
 ## NEXT
+
 ### Processing Results of Asynchronous Computations
-- thenCompose
-- thenCombine
-- thenAcceptBoth
-- diff between thenApply and thenCompose
-- join parallel futures
-- handle
+- handle errors
 - diff between thenApply and thenApplyAsync ()
+
+### Write examples from EA and RxJava with CF's
+- http://reactivex.io/intro.html
+- https://gist.github.com/benjchristensen/4670979
+- https://gist.github.com/benjchristensen/4671081
+- https://github.com/electronicarts/ea-async
+
+### Java 9 CompletableFuture
+- ...
+
+### CountDown Latch
+- https://www.baeldung.com/java-countdown-latch
 
 ## Sources
 - https://www.baeldung.com/java-completablefuture
-- https://mkyong.com/java8/java-8-consumer-examples/
-- https://mkyong.com/java8/java-8-supplier-examples/
-
-- https://www.deadcoderising.com/java8-writing-asynchronous-code-with-completablefuture/
-- https://dzone.com/articles/lambdas-in-concurrency-with-non-blocking-io
-- https://github.com/electronicarts/ea-async
+- https://www.baeldung.com/java-9-completablefuture
 - https://grokonez.com/java/java-8/java-8-multiple-completablefutures
+- https://www.deadcoderising.com/java8-writing-asynchronous-code-with-completablefuture/
+- https://mkyong.com/java8/java-8-supplier-examples/
+- https://mkyong.com/java8/java-8-consumer-examples/
+

@@ -6,16 +6,23 @@ package de.kacperbak;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class App {
 
+    private static final String VERBOSE_KEY = "stdout";
+    private static final String VERBOSE_VALUE = "verbose";
     private static final int PAUSE_IN_MS = 2000;
 
     public static void main(String[] args) {
+
+        // To display the thread implications on stdout set the property to 'verbose'
+        System.setProperty(VERBOSE_KEY, VERBOSE_VALUE);
         try {
             var app = new App();
-            var helloString = app.usingThenResult().get();
-            System.out.println("helloString: " + helloString);
+            var result = app.usingThenAccept().get();
+            System.out.println(result);
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -23,7 +30,63 @@ public class App {
 
     /**
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
-     * 2nd Lambda: Accepts a function instance with parameters, processes the result and returns a Future<string>
+     * 2nd Lambda: Supplier with no input parameter and a Future<string> as return type
+     * 3rd Lambda: Supplier with no input parameter and a Future<string> as return type
+     *
+     * thread 'ForkJoinPool.commonPool-worker-5' sleeps for '1' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '4' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-7' sleeps for '8' seconds.
+     * helloString: Hello Beautiful World
+     */
+    public String usingJoin() {
+        CompletableFuture<String> f1 = CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS*2);
+                    return "Hello";
+                });
+        CompletableFuture<String> f2 = CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS/2);
+                    return "Beautiful";
+                });
+        CompletableFuture<String> f3 = CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS*4);
+                    return "World!";
+                });
+
+        // join will block until all features are finished
+        return Stream.of(f1, f2, f3).map(CompletableFuture::join).collect(Collectors.joining(" "));
+    }
+
+    /**
+     * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
+     * 2nd Lambda: Accepts the previous CompletionStage as the argument, processes the result and returns a Future<string>
+     *
+     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '2' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-5' sleeps for '2' seconds.
+     * Hello World!
+     */
+    public Future<String> usingThenCompose() {
+        var cf = CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS);
+                    return "Hello";
+                });
+        return cf.thenCompose(s -> CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS);
+                    return s + " World!";
+                }));
+    }
+
+    /**
+     * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
+     * 2nd Lambda: Accepts a Function instance with parameters, processes the result and returns a Future<string>
+     *
+     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '2' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '2' seconds.
+     * Hello World!
      */
     public Future<String> usingThenApply() {
         var cf = CompletableFuture.supplyAsync(
@@ -41,6 +104,8 @@ public class App {
     /**
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
      * 2nd Lambda: Accepts a function instance with parameters, processes the result and returns Void
+     *
+     * Hello World!null
      * @return
      */
     public CompletableFuture<Void> usingThenAccept() {
@@ -57,15 +122,23 @@ public class App {
     /**
      * 1st Lambda: Accepts a function instance with no parameters, processes the result and returns Void
      * 2nd Lambda: Accepts a function instance with no parameters, processes the result and returns Void
+     *
+     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '1' seconds.
+     * Hello World!
+     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '1' seconds.
+     * Hello World!
+     * null
      * @return
      */
     public CompletableFuture<Void> usingThenResult() {
         var cf = CompletableFuture.runAsync(
                 () -> {
+                    threadSleep(1000);
                     System.out.printf("Hello World!");
                 });
         return cf.thenRunAsync(
                 () -> {
+                    threadSleep(1000);
                     System.out.printf("Hello World!");
                 });
     }
@@ -74,10 +147,11 @@ public class App {
      * Lambda: Supplier with one input parameter and a Future<string> as return type
      */
     public Future<String> calculateAsyncWithSupplyAndParameter(String s) {
-        return CompletableFuture.supplyAsync(() -> {
-            threadSleep(PAUSE_IN_MS);
-            return "Hello " + s;
-        });
+        return CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(PAUSE_IN_MS);
+                    return "Hello " + s;
+                });
     }
 
     /**
@@ -96,12 +170,17 @@ public class App {
 
     /**
      * This method encapsulates the IE exception that it is not propagated further
+     *
      * @param ms
      */
     private void threadSleep(int ms) {
         try {
-            Thread.sleep(ms);
-            System.out.printf("thread sleep for '%s' seconds.\n", (ms/1000));
+            if(System.getProperty(VERBOSE_KEY).equalsIgnoreCase(VERBOSE_VALUE)){
+                Thread.sleep(ms);
+                var sleepInSeconds = (ms / 1000);
+                var threadName = Thread.currentThread().getName();
+                System.out.printf("thread '%s' sleeps for '%s' seconds.\n", threadName, sleepInSeconds);
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

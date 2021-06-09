@@ -14,8 +14,12 @@ import java.util.concurrent.TimeUnit;
 
 public class AppTest {
 
+    private static final String VERBOSE_KEY = "stdout";
+    private static final String QUIET_VALUE = "quiet";
+    private static final String EXPECTED_HELLO_WORLD = "Hello World!";
+    private static final String EXPECTED_HELLO_BEAUTIFUL_WORLD = "Hello Beautiful World!";
+
     private App app;
-    private final String EXPECTED_HELLO_WORLD = "Hello World!";
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final PrintStream originalOut = System.out;
 
@@ -23,10 +27,13 @@ public class AppTest {
     public void setUp() throws Exception {
         app = new App();
         System.setOut(new PrintStream(outContent));
+
+        // Since stdout is grepped and used for comparisation, verbose output is disabled
+        System.setProperty(VERBOSE_KEY, QUIET_VALUE);
     }
 
     /**
-     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
     @Test public void testCalculateAsyncWithSupply() throws Exception {
         stopWatch("start");
@@ -37,18 +44,18 @@ public class AppTest {
     }
 
     /**
-     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
     @Test public void testCalculateAsyncWithSupplyAndParameter() throws Exception {
         stopWatch("start");
-        var actualResult = app.calculateAsyncWithSupplyAndParameter(" World!").get();
+        var actualResult = app.calculateAsyncWithSupplyAndParameter("World!").get();
         stopWatch("end");
 
         assertEquals(EXPECTED_HELLO_WORLD, actualResult);
     }
 
     /**
-     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
     @Test public void testCalculateAsync() throws Exception {
         stopWatch("start");
@@ -59,7 +66,7 @@ public class AppTest {
     }
 
     /**
-     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
     @Test public void testUsingThenApply() throws Exception {
         stopWatch("start");
@@ -70,7 +77,7 @@ public class AppTest {
     }
 
     /**
-     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
     @Test public void testUsingThenAccept() throws Exception {
         app.usingThenAccept().get();
@@ -78,11 +85,27 @@ public class AppTest {
     }
 
     /**
-     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait for the result
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
     @Test public void testUsingThenResult() throws Exception {
         app.usingThenResult().get();
         assertEquals(EXPECTED_HELLO_WORLD + EXPECTED_HELLO_WORLD, outContent.toString());
+    }
+
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
+     */
+    @Test public void testUsingThenCompose() throws Exception {
+        var actualResult = app.usingThenCompose().get();
+        assertEquals(EXPECTED_HELLO_WORLD , actualResult);
+    }
+
+    /**
+     * IMPORTANT: Internal calling CompletableFuture::join which forces the runtime to sync/wait/block for the result
+     */
+    @Test public void testUsingJoin() throws Exception {
+        var actualResult = app.usingJoin();
+        assertEquals(EXPECTED_HELLO_BEAUTIFUL_WORLD, actualResult);
     }
 
     private static void stopWatch(String action)
