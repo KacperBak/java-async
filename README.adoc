@@ -5,21 +5,22 @@ Simple Java async examples
 
 ### Processing Results of Asynchronous Computations
 - handle errors
-- diff between thenApply and thenApplyAsync ()
 
-### Write examples from EA and RxJava with CF's
+## Further Topics
+- https://www.baeldung.com/java-countdown-latch[CountDown Latch]
+
+### RxJava
 - http://reactivex.io/intro.html
+
+### EAsync
 - https://gist.github.com/benjchristensen/4670979
 - https://gist.github.com/benjchristensen/4671081
 - https://github.com/electronicarts/ea-async
 
-### Java 9 CompletableFuture
-- ...
-
-### CountDown Latch
-- https://www.baeldung.com/java-countdown-latch
-
 ## Sources
+- https://www.baeldung.com/java-asynchronous-programming
+- https://www.baeldung.com/cs/async-vs-multi-threading
+- https://github.dev/eugenp/tutorials/tree/master/core-java-modules/core-java-concurrency-advanced-3
 - https://www.baeldung.com/java-completablefuture
 - https://www.baeldung.com/java-9-completablefuture
 - https://grokonez.com/java/java-8/java-8-multiple-completablefutures

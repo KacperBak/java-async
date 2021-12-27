@@ -21,7 +21,7 @@ public class App {
         System.setProperty(VERBOSE_KEY, VERBOSE_VALUE);
         try {
             var app = new App();
-            var result = app.usingThenAccept().get();
+            var result = app.usingWhenComplete().get();
             System.out.println(result);
         } catch (Exception e) {
             System.out.println(e);
@@ -32,7 +32,7 @@ public class App {
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
      * 2nd Lambda: Supplier with no input parameter and a Future<string> as return type
      * 3rd Lambda: Supplier with no input parameter and a Future<string> as return type
-     *
+     * <p>
      * thread 'ForkJoinPool.commonPool-worker-5' sleeps for '1' seconds.
      * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '4' seconds.
      * thread 'ForkJoinPool.commonPool-worker-7' sleeps for '8' seconds.
@@ -41,17 +41,17 @@ public class App {
     public String usingJoin() {
         CompletableFuture<String> f1 = CompletableFuture.supplyAsync(
                 () -> {
-                    threadSleep(PAUSE_IN_MS*2);
+                    threadSleep(PAUSE_IN_MS * 2);
                     return "Hello";
                 });
         CompletableFuture<String> f2 = CompletableFuture.supplyAsync(
                 () -> {
-                    threadSleep(PAUSE_IN_MS/2);
+                    threadSleep(PAUSE_IN_MS / 2);
                     return "Beautiful";
                 });
         CompletableFuture<String> f3 = CompletableFuture.supplyAsync(
                 () -> {
-                    threadSleep(PAUSE_IN_MS*4);
+                    threadSleep(PAUSE_IN_MS * 4);
                     return "World!";
                 });
 
@@ -62,7 +62,7 @@ public class App {
     /**
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
      * 2nd Lambda: Accepts the previous CompletionStage as the argument, processes the result and returns a Future<string>
-     *
+     * <p>
      * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '2' seconds.
      * thread 'ForkJoinPool.commonPool-worker-5' sleeps for '2' seconds.
      * Hello World!
@@ -84,28 +84,130 @@ public class App {
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
      * 2nd Lambda: Accepts a Function instance with parameters, processes the result and returns a Future<string>
      *
-     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '2' seconds.
-     * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '2' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '1' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '2' seconds.
      * Hello World!
      */
     public Future<String> usingThenApply() {
         var cf = CompletableFuture.supplyAsync(
                 () -> {
-                    threadSleep(PAUSE_IN_MS);
+                    threadSleep(1000);
                     return "Hello";
                 });
-        return cf.thenApply(
+        return cf.thenApply(          //
                 s -> {
-                    threadSleep(PAUSE_IN_MS);
+                    threadSleep(2000);
                     return s + " World!";
                 });
     }
 
     /**
+     * One CF executed on ONE worker tread
+     *
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '1' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '2' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '1' seconds.
+     * Hello big World!
+     */
+    public Future<String> usingThenApplyMultipleTimes() {
+        return CompletableFuture.supplyAsync(
+                () -> {
+                    threadSleep(1000);
+                    return "Hello";
+                })
+                .thenApply(
+                s -> {
+                    threadSleep(2000);
+                    return s + " big";
+                })
+                .thenApply(
+                s -> {
+                    threadSleep(1000);
+                    return s + " World!";
+                });
+    }
+
+    /**
+     * One CF executed on DIFFERENT worker threads
+     *
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '1' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-2' sleeps for '2' seconds.
+     * thread 'ForkJoinPool.commonPool-worker-2' sleeps for '1' seconds.
+     * Hello big World!
+     */
+    public Future<String> usingThenApplyMultipleTimesAsync() {
+        return CompletableFuture.supplyAsync(
+                        () -> {
+                            threadSleep(1000);
+                            return "Hello";
+                        })
+                .thenApplyAsync(
+                        s -> {
+                            threadSleep(2000);
+                            return s + " big";
+                        })
+                .thenApplyAsync(
+                        s -> {
+                            threadSleep(1000);
+                            return s + " World!";
+                        });
+    }
+
+    /**
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '0' seconds.
+     * OnComplete 1st stage: 'Hello'
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '1' seconds.
+     * OnComplete 2nd stage: 'Hello big cheesy'
+     * thread 'ForkJoinPool.commonPool-worker-1' sleeps for '1' seconds.
+     * Hello big World!
+     */
+    public CompletableFuture<String> usingWhenComplete() {
+        return CompletableFuture
+                .supplyAsync( () -> {    // create CompletableFuture
+                    threadSleep(0);
+                    return "Hello";
+                })
+                .whenComplete(this::onComplete1Stage) // register callback on 1st Stage
+                .thenApply(this::addBig)
+                .whenComplete( (result , exception) -> { // register callback on 2nd Stage
+                    if (exception != null)
+                    {
+                        exception.printStackTrace();
+                    } else
+                    {
+                      result += " cheesy";  // note this value is just printed NOT passed to the next stage!
+                      System.out.println(String.format("OnComplete 2nd stage: '%s'", result));
+                    }
+                })
+                .thenApply(s -> {
+                    threadSleep(1500);
+                    return s + " World!";
+                });
+    }
+
+    private String addBig(String s)
+    {
+        threadSleep(1000);
+        return s + " big";
+    }
+
+    private void onComplete1Stage(String s, Throwable e)
+    {
+        if (e != null)
+        {
+            e.printStackTrace();
+        } else
+        {
+            System.out.println(String.format("OnComplete 1st stage: '%s'", s));
+        }
+    }
+
+    /**
      * 1st Lambda: Supplier with no input parameter and a Future<string> as return type
      * 2nd Lambda: Accepts a function instance with parameters, processes the result and returns Void
-     *
+     * <p>
      * Hello World!null
+     *
      * @return
      */
     public CompletableFuture<Void> usingThenAccept() {
@@ -122,15 +224,16 @@ public class App {
     /**
      * 1st Lambda: Accepts a function instance with no parameters, processes the result and returns Void
      * 2nd Lambda: Accepts a function instance with no parameters, processes the result and returns Void
-     *
+     * <p>
      * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '1' seconds.
      * Hello World!
      * thread 'ForkJoinPool.commonPool-worker-3' sleeps for '1' seconds.
      * Hello World!
      * null
+     *
      * @return
      */
-    public CompletableFuture<Void> usingThenResult() {
+    public CompletableFuture<Void> usingRunAsyncTwice() {
         var cf = CompletableFuture.runAsync(
                 () -> {
                     threadSleep(1000);
@@ -175,7 +278,7 @@ public class App {
      */
     private void threadSleep(int ms) {
         try {
-            if(System.getProperty(VERBOSE_KEY).equalsIgnoreCase(VERBOSE_VALUE)){
+            if (System.getProperty(VERBOSE_KEY).equalsIgnoreCase(VERBOSE_VALUE)) {
                 Thread.sleep(ms);
                 var sleepInSeconds = (ms / 1000);
                 var threadName = Thread.currentThread().getName();

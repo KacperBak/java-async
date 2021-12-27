@@ -17,6 +17,7 @@ public class AppTest {
     private static final String VERBOSE_KEY = "stdout";
     private static final String QUIET_VALUE = "quiet";
     private static final String EXPECTED_HELLO_WORLD = "Hello World!";
+    private static final String EXPECTED_HELLO_BIG_WORLD = "Hello big World!";
     private static final String EXPECTED_HELLO_BEAUTIFUL_WORLD = "Hello Beautiful World!";
 
     private App app;
@@ -79,6 +80,28 @@ public class AppTest {
     /**
      * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
      */
+    @Test public void testUsingThenApplyMultipleTimes() throws Exception {
+        stopWatch("start");
+        var actualResult = app.usingThenApplyMultipleTimes().get();
+        stopWatch("end");
+
+        assertEquals(EXPECTED_HELLO_BIG_WORLD, actualResult);
+    }
+
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
+     */
+    @Test public void testUsingThenApplyMultipleTimesAsync() throws Exception {
+        stopWatch("start");
+        var actualResult = app.usingThenApplyMultipleTimesAsync().get();
+        stopWatch("end");
+
+        assertEquals(EXPECTED_HELLO_BIG_WORLD, actualResult);
+    }
+
+    /**
+     * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
+     */
     @Test public void testUsingThenAccept() throws Exception {
         app.usingThenAccept().get();
         assertEquals(EXPECTED_HELLO_WORLD, outContent.toString());
@@ -86,9 +109,10 @@ public class AppTest {
 
     /**
      * IMPORTANT: Calling 'get()' forces the runtime to sync/wait/block for the result
+     * Since runAsync is called twice, two CF are created that print 'Hello World!'
      */
-    @Test public void testUsingThenResult() throws Exception {
-        app.usingThenResult().get();
+    @Test public void testUsingRunAsyncTwice() throws Exception {
+        app.usingRunAsyncTwice().get();
         assertEquals(EXPECTED_HELLO_WORLD + EXPECTED_HELLO_WORLD, outContent.toString());
     }
 
